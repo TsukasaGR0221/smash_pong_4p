@@ -1914,7 +1914,7 @@
         <span class="key-kbd">R</span>
         <div class="guide-info">
             <span class="guide-name" style="color: #ef4444;">2P (赤) 前衛</span>
-            <span class="guide-action">HOLD: 上昇 / RELEASE: 下降</span>
+            <span class="guide-action">HOLD: 下降 / RELEASE: 上昇</span>
         </div>
     </div>
     <div style="width: 2px; height: 36px; background: rgba(255,255,255,0.15); margin: 0 4px;"></div>
@@ -1922,7 +1922,7 @@
         <span class="key-kbd">U</span>
         <div class="guide-info">
             <span class="guide-name" style="color: #3b82f6;">3P (青) 前衛</span>
-            <span class="guide-action">HOLD: 上昇 / RELEASE: 下降</span>
+            <span class="guide-action">HOLD: 下降 / RELEASE: 上昇</span>
         </div>
     </div>
     <div class="guide-card p4" id="guide-pink_c0_r0">
@@ -2090,6 +2090,9 @@
                     </button>
                     <button id="setting-announcer-toggle-btn" class="cyber-btn sm cyan" title="実況音声のON/OFF切り替え" style="padding: 8px 10px; font-size: 0.82rem; justify-content: center; min-height: 38px; color: #fff; white-space: nowrap;">
                         🎙️ 実況: ON
+                    </button>
+                    <button id="setting-invert-front-toggle-btn" class="cyber-btn sm cyan" title="前衛パドルの移動方向を反転（逆操作）" style="padding: 8px 10px; font-size: 0.82rem; justify-content: center; min-height: 38px; color: #fff; white-space: nowrap;">
+                        🔄 前衛反転: ON
                     </button>
                     <button id="setting-cpu-strength-btn" class="cyber-btn sm cyan" title="CPUの強さ" style="display: none !important; padding: 8px 10px; font-size: 0.82rem; justify-content: center; min-height: 38px; color: #fff; white-space: nowrap;">
                         🤖 CPU: 弱い
@@ -2292,6 +2295,7 @@
                     <button id="items-toggle-btn" class="cyber-btn sm cyan host-only-element" title="アイテム出現の切り替え" style="padding: 4px 11px; font-size: 0.82rem; color: #fff;">🎁 アイテム: ON</button>
                     <button id="team-pass-toggle-btn" class="cyber-btn sm cyan host-only-element" title="チームパス＆必殺技の切り替え" style="padding: 4px 11px; font-size: 0.82rem; color: #fff;">⚡ チームパス: ON</button>
                     <button id="announcer-toggle-btn" class="cyber-btn sm cyan host-only-element" title="実況音声のON/OFF切り替え" style="padding: 4px 11px; font-size: 0.82rem; color: #fff;">🎙️ 実況: ON</button>
+                    <button id="invert-front-toggle-btn" class="cyber-btn sm cyan host-only-element" title="前衛パドルの移動方向を反転（逆操作）" style="padding: 4px 11px; font-size: 0.82rem; color: #fff;">🔄 前衛反転: ON</button>
                     <button id="cpu-strength-btn" class="cyber-btn sm cyan host-only-element" title="CPUの強さ" style="display: none !important; padding: 4px 11px; font-size: 0.82rem; color: #fff;">🤖 CPU: 弱い</button>
                     <button id="lobby-zone-toggle-btn" class="cyber-btn sm secondary host-only-element" title="パドルの動く範囲を表示" style="padding: 4px 11px; font-size: 0.82rem;">📏 範囲表示: OFF</button>
                     <button id="leave-room-btn" class="cyber-btn sm secondary" style="padding: 4px 11px; font-size: 0.82rem;">退出</button>
@@ -2804,6 +2808,7 @@
         }
         let enableItems = true;
         let enableTeamPass = true;
+        let enableInvertFront = localStorage.getItem('pong_invert_front') !== 'false'; // 🔄 前衛操作反転 (デフォルトON)
         let isAnnouncerEnabled = localStorage.getItem('pong_announcer_enabled') !== 'false'; // 🎙️ 実況音声 (デフォルトON)
         let enableSmash = true; // ⚡ スマッシュ (デフォルトON)
         let enableCutIn = true; // 🎬 カットイン演出 (デフォルトON)
@@ -4582,6 +4587,7 @@
         const settingItemsBtn = document.getElementById('setting-items-toggle-btn');
         const settingTeamPassBtn = document.getElementById('setting-team-pass-toggle-btn');
         const settingAnnouncerBtn = document.getElementById('setting-announcer-toggle-btn');
+        const settingInvertFrontBtn = document.getElementById('setting-invert-front-toggle-btn');
 
         const cpuStrengthMap = {
             '1': { text: '🤖 CPU: 弱い', color: '#ffffff' },
@@ -4676,6 +4682,30 @@
                 settingAnnouncerBtn.innerHTML = isAnnouncerEnabled ? '🎙️ 実況: ON' : '🎙️ 実況: OFF';
                 settingAnnouncerBtn.className = 'cyber-btn sm ' + (isAnnouncerEnabled ? 'cyan' : 'secondary');
             }
+        }
+
+        function updateInvertFrontUI(enabled) {
+            if (enabled !== undefined) {
+                enableInvertFront = !!enabled;
+                try {
+                    localStorage.setItem('pong_invert_front', enableInvertFront ? 'true' : 'false');
+                } catch(e){}
+            }
+            const ifBtn = document.getElementById('invert-front-toggle-btn');
+            if (ifBtn) {
+                ifBtn.innerHTML = enableInvertFront ? '🔄 前衛反転: ON' : '🔄 前衛反転: OFF';
+                ifBtn.className = 'cyber-btn sm ' + (enableInvertFront ? 'cyan' : 'secondary') + ' host-only-element';
+            }
+            if (settingInvertFrontBtn) {
+                settingInvertFrontBtn.innerHTML = enableInvertFront ? '🔄 前衛反転: ON' : '🔄 前衛反転: OFF';
+                settingInvertFrontBtn.className = 'cyber-btn sm ' + (enableInvertFront ? 'cyan' : 'secondary');
+            }
+            // 画面下部キーガイドの更新
+            const g2 = document.querySelector('#guide-purple_c1_r0 .guide-action');
+            const g3 = document.querySelector('#guide-pink_c1_r0 .guide-action');
+            const text = enableInvertFront ? 'HOLD: 下降 / RELEASE: 上昇' : 'HOLD: 上昇 / RELEASE: 下降';
+            if (g2) g2.innerText = text;
+            if (g3) g3.innerText = text;
         }
 
         function updateExciteSubSettingsUI(state) {
@@ -4797,6 +4827,7 @@
             updateItemsUI(enableItems);
             updateTeamPassUI(enableTeamPass);
             updateAnnouncerUI(isAnnouncerEnabled);
+            updateInvertFrontUI(enableInvertFront);
             updateExciteSubSettingsUI();
         }
 
@@ -5053,6 +5084,15 @@
 
                 if (typeof setMatchDuration === 'function') setMatchDuration(60, true);
 
+                updateInvertFrontUI(true);
+                if (localEngine) {
+                    localEngine.enableInvertFront = true;
+                    localEngine.broadcastRoomState();
+                }
+                if (ws && isHost) {
+                    ws.send(JSON.stringify({ type: 'change_invert_front_enabled', enabled: true }));
+                }
+
                 syncSettingsModalFromLobby();
             });
         }
@@ -5106,6 +5146,20 @@
                 updateAnnouncerUI(nextVal);
                 if (ws && isHost) {
                     ws.send(JSON.stringify({ type: 'change_announcer_enabled', enabled: nextVal }));
+                }
+            });
+        }
+
+        if (settingInvertFrontBtn) {
+            settingInvertFrontBtn.addEventListener('click', () => {
+                const nextVal = !enableInvertFront;
+                updateInvertFrontUI(nextVal);
+                if (localEngine) {
+                    localEngine.enableInvertFront = nextVal;
+                    localEngine.broadcastRoomState();
+                }
+                if (ws && isHost) {
+                    ws.send(JSON.stringify({ type: 'change_invert_front_enabled', enabled: nextVal }));
                 }
             });
         }
@@ -5315,6 +5369,21 @@
             });
         }
 
+        const invertFrontToggleBtn = document.getElementById('invert-front-toggle-btn');
+        if (invertFrontToggleBtn) {
+            invertFrontToggleBtn.addEventListener('click', () => {
+                const nextVal = !enableInvertFront;
+                updateInvertFrontUI(nextVal);
+                if (localEngine) {
+                    localEngine.enableInvertFront = nextVal;
+                    localEngine.broadcastRoomState();
+                }
+                if (ws && isHost) {
+                    ws.send(JSON.stringify({ type: 'change_invert_front_enabled', enabled: nextVal }));
+                }
+            });
+        }
+
         const exciteSubKeys = [
             { key: 'smash', lobbyId: 'smash-toggle-btn', modalId: 'setting-smash-toggle-btn' },
             { key: 'cutin', lobbyId: 'cutin-toggle-btn', modalId: 'setting-cutin-toggle-btn' },
@@ -5436,6 +5505,7 @@ class GameRoom {
         this.enableItems = true;
         this.enableTeamPass = true; // ⚡ チームパス＆必殺技モード (デフォルトON)
         this.enableAnnouncer = true; // 🎙️ 実況音声モード (デフォルトON)
+        this.enableInvertFront = true; // 🔄 前衛操作反転 (デフォルトON)
         this.enableSmash = true; // ⚡ スマッシュ (デフォルトON)
         this.enableCutIn = true; // 🎬 カットイン演出 (デフォルトON)
         this.enableScreenShake = true; // 📳 画面シェイク (デフォルトON)
@@ -6126,7 +6196,12 @@ class GameRoom {
                 paddle.lastY = paddle.y;
                 let moveSpeed = 12 * this.paddleSpeed;
                 if (slot.isSuperBoost) moveSpeed *= 2.4;
-                if (slot.isUp) {
+
+                // 前衛と後衛で動きを逆にする（後衛: HOLDで上昇 / 前衛: HOLDで下降。enableInvertFrontでON/OFF可能）
+                const isFront = (paddle.columnIdx === 1 || key.includes('_c1_'));
+                const shouldInvert = this.enableInvertFront && isFront;
+                const shouldMoveUp = shouldInvert ? !slot.isUp : slot.isUp;
+                if (shouldMoveUp) {
                     paddle.y -= moveSpeed;
                 } else {
                     paddle.y += moveSpeed;
@@ -6505,8 +6580,15 @@ class GameRoom {
                     const isAbove = p.y > targetY + reactionMargin;
                     const isBelow = p.y < targetY - reactionMargin;
                     
-                    if (isAbove) slot.isUp = true;
-                    else if (isBelow) slot.isUp = false;
+                    const isFront = (p.columnIdx === 1 || key.includes('_c1_'));
+                    const shouldInvert = this.enableInvertFront && isFront;
+                    if (shouldInvert) {
+                        if (isAbove) slot.isUp = false;
+                        else if (isBelow) slot.isUp = true;
+                    } else {
+                        if (isAbove) slot.isUp = true;
+                        else if (isBelow) slot.isUp = false;
+                    }
                 }
             }
         }
@@ -7282,6 +7364,7 @@ class GameRoom {
             enableItems: this.enableItems,
             enableTeamPass: this.enableTeamPass !== undefined ? this.enableTeamPass : true,
             enableAnnouncer: this.enableAnnouncer !== undefined ? this.enableAnnouncer : true,
+            enableInvertFront: this.enableInvertFront !== undefined ? this.enableInvertFront : true,
             enableSmash: this.enableSmash !== undefined ? this.enableSmash : true,
             enableCutIn: this.enableCutIn !== undefined ? this.enableCutIn : true,
             enableScreenShake: this.enableScreenShake !== undefined ? this.enableScreenShake : true,
@@ -7519,6 +7602,7 @@ function updateKeyGuideUI() {
 function initLocal4PGame() {
     console.log("🎮 初期化: 4P ローカル対戦モード");
     localEngine = new GameRoom('LOCAL_4P');
+    localEngine.enableInvertFront = enableInvertFront;
     localEngine.setup4PLocalSlots();
 
     // 疑似WebSocket
@@ -7627,6 +7711,10 @@ function handleLocalWSCommand(msg) {
             break;
         case 'change_announcer_enabled':
             localEngine.enableAnnouncer = !!msg.enabled;
+            localEngine.broadcastRoomState();
+            break;
+        case 'change_invert_front_enabled':
+            localEngine.enableInvertFront = !!msg.enabled;
             localEngine.broadcastRoomState();
             break;
         case 'toggle_excite_sub_setting':
@@ -9105,6 +9193,10 @@ function connectWebSocket() {
                 updateAnnouncerUI(state.enableAnnouncer);
             }
 
+            if (state.enableInvertFront !== undefined) {
+                updateInvertFrontUI(state.enableInvertFront);
+            }
+
             updateExciteSubSettingsUI(state);
 
             if (state.gameMode) {
@@ -10136,10 +10228,10 @@ function connectWebSocket() {
 
         function updateLocalGame() {
             const keys = localKeys;
-            // パドル操作
+            // パドル操作 (後衛: 上昇 / 前衛: 下降)
             if (keys['q'] || isTouchingScreen) paddles.purple_back.y -= 15; else paddles.purple_back.y += 10;
-            if (keys['r']) paddles.purple_front.y -= 15; else paddles.purple_front.y += 10;
-            if (keys['u']) paddles.pink_front.y -= 15; else paddles.pink_front.y += 10;
+            if (keys['r']) paddles.purple_front.y += 15; else paddles.purple_front.y -= 10;
+            if (keys['u']) paddles.pink_front.y += 15; else paddles.pink_front.y -= 10;
             if (keys['p']) paddles.pink_back.y -= 15; else paddles.pink_back.y += 10;
 
             for (const key of Object.keys(paddles)) {
@@ -11030,6 +11122,7 @@ function connectWebSocket() {
 
     // 初期化実行
     updateAnnouncerUI(isAnnouncerEnabled);
+    updateInvertFrontUI(enableInvertFront);
     updateExciteSubSettingsUI();
     initClientShields();
     initLocal4PGame();
